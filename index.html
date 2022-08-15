@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>my places app</title>
+    <link rel="stylesheet" href="./src/css/index.css" />
+    <script type="module" defer src="./src/js/index.js"></script>
+  </head>
+  <body class="h-screen font-poppins">
+    <div class="grid h-full grid-cols-3 bg-emerald-500">
+      <div class="relative bg-slate-800 px-6 text-white">
+        <h2 class="mx-5 mt-10 border-l-[6px] border-emerald-500 pl-3 text-4xl font-bold">my places</h2>
+        <div id="home" class="home mt-8 mb-4">
+          <p id="homeLocation" class="text-sm italic pointer-events-none">loading</p>
+          <p class="text-lg pointer-events-none">📌 current position</p>
+        </div>
+
+        <form class="mt-4 hidden rounded-t-lg bg-white/30 py-4 px-5 text-lg transition">
+          <input
+            id="addPlace"
+            type="text"
+            class="border-red-white block w-full border-b-2 bg-transparent outline-none"
+            spellcheck="false"
+            required
+            placeholder="write place's name"
+          />
+          <button type="submit" class="mt-2 font-semibold underline underline-offset-2">
+            add place
+          </button>
+        </form>
+
+        <div id="places-container" class="border-t-2 border-white/30 pt-4">
+        </div>
+      </div>
+      <div class="col-span-2 p-6">
+        <div id="map" class="h-full rounded-lg outline-none"></div>
+      </div>
+    </div>
+  </body>
+</html>

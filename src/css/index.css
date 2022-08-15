@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&display=swap');
+@import '../../node_modules/leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .home {
+    @apply py-2 px-5 cursor-pointer;
+  }
+  .place {
+    @apply cursor-pointer rounded py-2 px-5 transition hover:bg-white/30 grid grid-cols-3 text-lg;
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "place-project",
+  "version": "1.0.0",
+  "description": "a simple javascript website to save all your favourite places",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel index.html --open"
+  },
+  "author": "Gherardi Victor",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "leaflet": "^1.8.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.21.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "os-browserify": "^0.3.0",
+    "parcel": "^2.7.0",
+    "path-browserify": "^1.0.1",
+    "postcss": "^8.4.16",
+    "prettier": "^2.7.1",
+    "prettier-plugin-tailwindcss": "^0.1.13",
+    "process": "^0.11.10",
+    "tailwindcss": "^3.1.8"
+  }
+}
