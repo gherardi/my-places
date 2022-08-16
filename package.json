@@ -2,7 +2,6 @@
   "name": "place-project",
   "version": "1.0.0",
   "description": "a simple javascript website to save all your favourite places",
-  "main": "index.js",
   "scripts": {
     "start": "parcel index.html --open"
   },
