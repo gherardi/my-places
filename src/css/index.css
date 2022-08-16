@@ -7,9 +7,20 @@
 
 @layer components {
   .home {
-    @apply py-2 px-5 cursor-pointer;
+    @apply cursor-pointer py-2 px-5;
   }
   .place {
-    @apply cursor-pointer rounded py-2 px-5 transition hover:bg-white/30 grid grid-cols-3 text-lg;
+    @apply grid cursor-pointer grid-cols-3 rounded py-2 px-5 text-lg transition hover:bg-white/30;
+  }
+
+  .leaflet-popup .leaflet-popup-content-wrapper {
+    @apply rounded-md border-l-[6px] border-emerald-500 bg-white text-slate-800;
+  }
+  .leaflet-popup .leaflet-popup-content {
+    @apply text-sm;
+  }
+
+  #map {
+    @apply font-poppins !important;
   }
 }

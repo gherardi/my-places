@@ -1,5 +1,6 @@
 import * as L from 'leaflet';
 import 'dotenv/config';
+import marker from '/node_modules/leaflet/src/images/marker.svg';
 
 const { API_TOKEN } = process.env;
 const BASE_URL = 'http://api.positionstack.com/v1/';
@@ -15,6 +16,13 @@ class App {
   #mapZoom = 16;
   #mapEvent;
   #places = [];
+  #dateFormat = {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  };
 
   constructor() {
     this.#getLocaleStorage();
@@ -41,11 +49,17 @@ class App {
   }
 
   async #loadInformation() {
+    const coordsLabel = document.querySelector('#coordsLocation');
+    const homeLabel = document.querySelector('#homeLocation');
     try {
-      const homeLabel = document.querySelector('#homeLocation');
+      coordsLabel.textContent = `${this.#home.latitude}, ${this.#home.longitude}`;
       const data = await this.#geocoding('reverse', this.#home);
-      homeLabel.textContent = `near ${data.administrative_area}`;
+      if (Object.keys(data).length === 0) throw new Error('No data found');
+      homeLabel.textContent = `📌 near ${data.administrative_area}`;
+      this.#renderPlaceMarker({ name: `current position: ${data.administrative_area}`, coords: this.#home });
     } catch (err) {
+      homeLabel.textContent = `📌 unable to find location`;
+      this.#renderPlaceMarker({ name: 'current position', coords: this.#home });
       this.#renderError(err);
     }
   }
@@ -70,7 +84,7 @@ class App {
         const { latitude, longitude } = query;
         url += `query=${latitude},${longitude}&limit=1`;
       }
-      const res = await Promise.race([fetch(url), this.#timeout(4)]);
+      const res = await Promise.race([fetch(url), this.#timeout(14)]);
       if (!res.ok) throw new Error('failed to fetch: ', res.status);
       const { data } = await res.json();
       return data[0];
@@ -85,11 +99,13 @@ class App {
       const { lat: latitude, lng: longitude } = this.#mapEvent.latlng;
       const cityData = await this.#geocoding('reverse', { latitude, longitude });
       const city = cityData.administrative_area;
+      const date = new Date().toISOString();
       const place = {
-        city,
         name: inputEl.value,
         id: Date.now(),
         coords: { latitude, longitude },
+        city,
+        date,
       };
       this.#places.push(place);
       this.#renderPlace(place);
@@ -103,32 +119,20 @@ class App {
 
   #renderPlace(place) {
     const distance = this.#calcDistance(this.#home, place.coords);
+    const date = new Intl.DateTimeFormat(navigator.language, this.#dateFormat).format(new Date(place.date));
     const markup = `
       <div class="place" data-id="${place.id}">
         <div class="col-span-2 pointer-events-none">
-          <p class="text-sm italic">${place.city}</p>
+          <p class="text-xs">${date}</p>
           <p class="truncate">${place.name}</p>
         </div>
-        <div class="col-span-1 flex items-end justify-end pointer-events-none">
-          <p class="mr-3 font-semibold">${distance} km</p>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-7 w-7"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+        <div class="col-span-1 pointer-events-none">
+        <p class="text-xs text-end">${place.city ? place.city : 'not found'}</p>
+        <p class="text-end font-semibold">${distance} km</p>
         </div>
       </div>
     `;
-    placesContainer.insertAdjacentHTML('afterbegin', markup);
+    placesContainer.insertAdjacentHTML('beforeend', markup);
   }
 
   #calcDistance(home, destination) {
@@ -139,13 +143,27 @@ class App {
     const destLon = (destination.longitude * PI) / 180;
 
     const { cos, sin, acos } = Math;
-
     const distance = acos(cos(homeLon - destLon) * cos(homeLat) * cos(destLat) + sin(homeLat) * sin(destLat)) * 6378;
 
     return distance.toFixed(1);
   }
 
-  #renderPlaceMarker() {}
+  #renderPlaceMarker(place) {
+    const { latitude, longitude } = place.coords;
+    const icon = L.icon({
+      iconUrl: marker,
+      iconSize: 40,
+    });
+    L.marker([latitude, longitude], { icon })
+      .addTo(this.#map)
+      .bindPopup(
+        L.popup({
+          autoClose: false,
+          closeOnClick: false,
+        })
+      )
+      .setPopupContent(`${place.name}`);
+  }
 
   #moveToPopup(e) {
     let destination = null;
@@ -202,7 +220,5 @@ class App {
 }
 const app = new App();
 
-// todo: fare il rendermarker
 // todo: fare il goto nella ui per andare in un indirizzo specifico
 // todo: cambiare l'svg info con un cestino, che se lo clicco elimina il place
-// todo: mettere la data in formato gg/mm/aaaa - hh:mm sopra i kilometri
