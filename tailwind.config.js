@@ -17,5 +17,9 @@ module.exports = {
       center: true,
     },
   },
+  safelist: [
+    'leaflet-popup leaflet-popup-content-wrapper',
+    'leaflet-popup leaflet-popup-content',
+  ],
   plugins: [],
 };

@@ -1,9 +1,12 @@
+// todo: fare il goto nella ui per andare in un indirizzo specifico
+// todo: cambiare l'svg info con un cestino, che se lo clicco elimina il place
+
 import * as L from 'leaflet';
 import 'dotenv/config';
 import marker from '/node_modules/leaflet/src/images/marker.svg';
 
-const { API_TOKEN } = process.env;
-const BASE_URL = 'http://api.positionstack.com/v1/';
+const { MAPBOX_TOKEN } = process.env;
+const BASE_URL = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
 
 const homeEl = document.querySelector('#home');
 const formEl = document.querySelector('form');
@@ -55,11 +58,12 @@ class App {
       coordsLabel.textContent = `${this.#home.latitude}, ${this.#home.longitude}`;
       const data = await this.#geocoding('reverse', this.#home);
       if (Object.keys(data).length === 0) throw new Error('No data found');
-      homeLabel.textContent = `📌 near ${data.administrative_area}`;
-      this.#renderPlaceMarker({ name: `current position: ${data.administrative_area}`, coords: this.#home });
+      const locality = data.context.find(item => item.id.includes('place')).text;
+      homeLabel.textContent = `📌 near ${locality}`;
+      this.#renderPlaceMarker({ name: `current position: ${locality}`, coords: this.#home });
     } catch (err) {
       homeLabel.textContent = `📌 unable to find location`;
-      this.#renderPlaceMarker({ name: 'current position', coords: this.#home });
+      this.#renderPlaceMarker({ name: 'no data found', coords: this.#home });
       this.#renderError(err);
     }
   }
@@ -77,17 +81,18 @@ class App {
 
   async #geocoding(type = 'forward', query) {
     try {
-      let url = `${BASE_URL}${type}?access_key=${API_TOKEN}&`;
+      let url = '';
       if (type === 'forward') {
-        url += `query=${encodeURI(query)}&limit=1`;
+        url = `${BASE_URL}${encodeURI(query)}.json?access_token=${MAPBOX_TOKEN}&limit=1`;
       } else if (type === 'reverse') {
         const { latitude, longitude } = query;
-        url += `query=${latitude},${longitude}&limit=1`;
+        url = `${BASE_URL}${longitude},${latitude}.json?access_token=${MAPBOX_TOKEN}&limit=1`;
       }
+
       const res = await Promise.race([fetch(url), this.#timeout(14)]);
-      if (!res.ok) throw new Error('failed to fetch: ', res.status);
-      const { data } = await res.json();
-      return data[0];
+      if (!res.ok) throw new Error('failed to fetch');
+      const { features } = await res.json();
+      return features[0];
     } catch (err) {
       throw err;
     }
@@ -98,13 +103,13 @@ class App {
     try {
       const { lat: latitude, lng: longitude } = this.#mapEvent.latlng;
       const cityData = await this.#geocoding('reverse', { latitude, longitude });
-      const city = cityData.administrative_area;
+      const locality = cityData.context.find(item => item.id.includes('place')).text;
       const date = new Date().toISOString();
       const place = {
         name: inputEl.value,
         id: Date.now(),
         coords: { latitude, longitude },
-        city,
+        locality,
         date,
       };
       this.#places.push(place);
@@ -127,7 +132,7 @@ class App {
           <p class="truncate">${place.name}</p>
         </div>
         <div class="col-span-1 pointer-events-none">
-        <p class="text-xs text-end">${place.city ? place.city : 'not found'}</p>
+        <p class="text-xs text-end">${place.locality ? place.locality : 'not found'}</p>
         <p class="text-end font-semibold">${distance} km</p>
         </div>
       </div>
@@ -219,6 +224,3 @@ class App {
   }
 }
 const app = new App();
-
-// todo: fare il goto nella ui per andare in un indirizzo specifico
-// todo: cambiare l'svg info con un cestino, che se lo clicco elimina il place
