@@ -1,5 +1,4 @@
 // todo: fare il goto nella ui per andare in un indirizzo specifico
-// todo: cambiare l'svg info con un cestino, che se lo clicco elimina il place
 
 import * as L from 'leaflet';
 import 'dotenv/config';
@@ -31,8 +30,9 @@ class App {
     this.#getLocaleStorage();
     this.#getPosition();
 
-    homeEl.addEventListener('click', this.#moveToPopup.bind(this));
-    placesContainer.addEventListener('click', this.#moveToPopup.bind(this));
+    homeEl.addEventListener('click', this.#setView.bind(this, this.#home));
+    // homeEl.addEventListener('click', () => this.#setView());
+    placesContainer.addEventListener('click', this.#handleClick.bind(this));
     formEl.addEventListener('submit', this.#newPlace.bind(this));
     document.addEventListener('keyup', e => (e.key === 'Escape' ? this.#hideForm() : ''));
   }
@@ -131,16 +131,21 @@ class App {
           <p class="text-xs">${date}</p>
           <p class="truncate">${place.name}</p>
         </div>
-        <div class="col-span-1 pointer-events-none">
-        <p class="text-xs text-end">${place.locality ? place.locality : 'not found'}</p>
-        <p class="text-end font-semibold">${distance} km</p>
+        <div class="col-span-1 grid grid-cols-3">
+          <p class="text-xs text-end col-span-3 pointer-events-none">${
+            place.locality ? place.locality : 'not found'
+          }</p>
+          <p class="col-span-2 font-semibold text-end pointer-events-none">${distance} km</p>
+          <svg xmlns="http://www.w3.org/2000/svg" class="ml-auto my-auto h-5 w-5 trash fill-red-400" viewBox="0 0 20 20">
+            <path class="pointer-events-none" fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
         </div>
       </div>
     `;
     placesContainer.insertAdjacentHTML('beforeend', markup);
   }
 
-  #calcDistance(home, destination) {
+  #calcDistance(home = this.#home, destination) {
     const { PI } = Math;
     const homeLat = (home.latitude * PI) / 180;
     const homeLon = (home.longitude * PI) / 180;
@@ -170,24 +175,29 @@ class App {
       .setPopupContent(`${place.name}`);
   }
 
-  #moveToPopup(e) {
-    let destination = null;
-    if (e.target.classList.contains('home')) {
-      const { latitude, longitude } = this.#home;
-      destination = [latitude, longitude];
-    } else if (e.target.classList.contains('place')) {
-      const id = +e.target.dataset.id;
-      const place = this.#places.find(place => place.id === id);
-      const { latitude, longitude } = place.coords;
-      destination = [latitude, longitude];
-    } else return;
-
-    this.#map.setView(destination, this.#mapZoom, {
+  #setView(coords = this.#home) {
+    const { latitude, longitude } = coords;
+    this.#map.setView([latitude, longitude], this.#mapZoom, {
       animate: true,
       pan: {
         duration: 1,
       },
     });
+  }
+
+  #handleClick(e) {
+    if (e.target.classList.contains('trash')) {
+      const placeEl = e.target.closest('.place');
+      this.#places = this.#places.filter(place => place.id !== Number(placeEl.dataset.id));
+      placeEl.remove();
+      this.#setLocaleStorage();
+      location.reload();
+      return;
+    }
+    if (!e.target.classList.contains('place')) return;
+    const id = +e.target.dataset.id;
+    const place = this.#places.find(place => place.id === id);
+    this.#setView(place.coords);
   }
 
   #showForm(e) {
