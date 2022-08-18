@@ -1,5 +1,3 @@
-// todo: fare il goto nella ui per andare in un indirizzo specifico
-
 import * as L from 'leaflet';
 import 'dotenv/config';
 import marker from '/node_modules/leaflet/src/images/marker.svg';
@@ -8,8 +6,10 @@ const { MAPBOX_TOKEN } = process.env;
 const BASE_URL = 'https://api.mapbox.com/geocoding/v5/mapbox.places/';
 
 const homeEl = document.querySelector('#home');
-const formEl = document.querySelector('form');
-const inputEl = document.querySelector('#addPlace');
+const gotoForm = document.querySelector('#gotoForm');
+const gotoPlaceInputEl = document.querySelector('#gotoPlace');
+const addPlaceFormEl = document.querySelector('#addPlaceForm');
+const addPlaceInputEl = document.querySelector('#addPlace');
 const placesContainer = document.querySelector('#places-container');
 
 class App {
@@ -33,7 +33,8 @@ class App {
     homeEl.addEventListener('click', this.#setView.bind(this, this.#home));
     // homeEl.addEventListener('click', () => this.#setView());
     placesContainer.addEventListener('click', this.#handleClick.bind(this));
-    formEl.addEventListener('submit', this.#newPlace.bind(this));
+    gotoForm.addEventListener('submit', this.#gotoPlace.bind(this));
+    addPlaceFormEl.addEventListener('submit', this.#newPlace.bind(this));
     document.addEventListener('keyup', e => (e.key === 'Escape' ? this.#hideForm() : ''));
   }
 
@@ -106,7 +107,7 @@ class App {
       const locality = cityData.context.find(item => item.id.includes('place')).text;
       const date = new Date().toISOString();
       const place = {
-        name: inputEl.value,
+        name: addPlaceInputEl.value,
         id: Date.now(),
         coords: { latitude, longitude },
         locality,
@@ -202,12 +203,12 @@ class App {
 
   #showForm(e) {
     this.#mapEvent = e;
-    formEl.classList.remove('hidden');
+    addPlaceFormEl.classList.remove('hidden');
   }
 
   #hideForm() {
-    inputEl.value = '';
-    formEl.classList.add('hidden');
+    addPlaceInputEl.value = '';
+    addPlaceFormEl.classList.add('hidden');
   }
 
   #renderError(err) {
@@ -231,6 +232,16 @@ class App {
     const places = JSON.parse(localStorage.getItem('places'));
     if (!places) return;
     this.#places = places;
+  }
+
+  async #gotoPlace(e) {
+    e.preventDefault();
+    const text = gotoPlaceInputEl.value;
+    gotoPlaceInputEl.value = '';
+    const data = await this.#geocoding('forward', text);
+    console.log(data);
+    const [longitude, latitude] = data.center;
+    this.#setView({ latitude, longitude });
   }
 }
 const app = new App();

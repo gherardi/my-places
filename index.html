@@ -17,11 +17,11 @@
           <p id="homeLocation" class="pointer-events-none truncate text-lg">📌 loading...</p>
         </div>
 
-        <form class="mt-4 hidden rounded-t-lg bg-white/30 py-4 px-5 text-lg transition">
+        <form id="addPlaceForm" class="mt-4 hidden rounded-t-lg bg-white/30 py-4 px-5 text-lg transition">
           <input
             id="addPlace"
             type="text"
-            class="border-red-white block w-full border-b-2 bg-transparent outline-none"
+            class="block w-full border-b-2 bg-transparent outline-none"
             spellcheck="false"
             required
             placeholder="write place's name"
@@ -30,6 +30,18 @@
         </form>
 
         <div id="places-container" class="space-y-2 border-t-2 border-white/30 pt-4"></div>
+
+        <form id="gotoForm" class="mt-4 flex rounded bg-white/30 py-4 px-5 text-lg transition">
+          <input
+            id="gotoPlace"
+            type="text"
+            class="block w-2/3 border-b-2 bg-transparent outline-none"
+            spellcheck="false"
+            required
+            placeholder="wrtie down where you would like to go"
+          />
+          <button type="submit" class="block w-1/3 font-semibold transition hover:translate-x-1">goto place</button>
+        </form>
       </div>
       <div class="col-span-2 p-6">
         <div id="map" class="h-full rounded-lg outline-none"></div>
